@@ -1,0 +1,475 @@
+{
+  "info": {
+    "name": "Kopi Kangenan API",
+    "description": "Koleksi lengkap REST API Kopi Kangenan (Laravel 13 + Sanctum).\n\n## Cara pakai\n\n1. Jalankan server:\n   ```\n   cd D:\\laragon\\www\\kopi-kangenan-api\n   php artisan serve --host=127.0.0.1 --port=8000\n   ```\n2. Pastikan variabel koleksi `baseUrl` = `http://127.0.0.1:8000/api`.\n3. Jalankan **Auth → Login (demo)**. Skrip tesnya menyimpan token ke variabel koleksi `token` secara otomatis.\n4. Semua endpoint yang butuh login memakai header `Authorization: Bearer {{token}}`.\n\nDokumentasi lengkap: `docs/api.md`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:8000/api" },
+    { "key": "token", "value": "" },
+    { "key": "orderId", "value": "1" },
+    { "key": "addressId", "value": "1" },
+    { "key": "messageId", "value": "1" },
+    { "key": "productId", "value": "1" },
+    { "key": "packId", "value": "1" },
+    { "key": "voucherCode", "value": "KANGENAN10" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login (demo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('ada token', () => pm.expect(body.data.token).to.be.a('string').and.not.empty);",
+                  "pm.collectionVariables.set('token', body.data.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"demo@kangenan.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
+            "description": "Masuk dengan akun demo. Token disimpan otomatis ke variabel `token`."
+          }
+        },
+        {
+          "name": "Daftar",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Budi\",\n  \"identifier\": \"budi@contoh.com\",\n  \"password\": \"123456\",\n  \"password_confirmation\": \"123456\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
+          }
+        },
+        {
+          "name": "Login Google (simulasi)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"pengguna.google@gmail.com\",\n  \"name\": \"Pengguna Google\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login/google", "host": ["{{baseUrl}}"], "path": ["auth", "login", "google"] }
+          }
+        },
+        {
+          "name": "Saya siapa",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/auth/me", "host": ["{{baseUrl}}"], "path": ["auth", "me"] }
+          }
+        },
+        {
+          "name": "Keluar",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/auth/logout", "host": ["{{baseUrl}}"], "path": ["auth", "logout"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Katalog (publik)",
+      "item": [
+        {
+          "name": "Outlets",
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/outlets", "host": ["{{baseUrl}}"], "path": ["outlets"] } }
+        },
+        {
+          "name": "Kategori",
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/categories", "host": ["{{baseUrl}}"], "path": ["categories"] } }
+        },
+        {
+          "name": "Produk menu",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/products?type=menu",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"],
+              "query": [{ "key": "type", "value": "menu" }]
+            }
+          }
+        },
+        {
+          "name": "Produk baru",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/products?new=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"],
+              "query": [{ "key": "new", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "Produk per kategori",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/products?category=Makanan",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"],
+              "query": [{ "key": "category", "value": "Makanan" }]
+            }
+          }
+        },
+        {
+          "name": "Detail produk",
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/products/{{productId}}", "host": ["{{baseUrl}}"], "path": ["products", "{{productId}}"] } }
+        },
+        {
+          "name": "Merchandise",
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/merch", "host": ["{{baseUrl}}"], "path": ["merch"] } }
+        },
+        {
+          "name": "Halaman statis",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/static-pages/help",
+              "host": ["{{baseUrl}}"],
+              "path": ["static-pages", "help"]
+            },
+            "description": "slug: help | privacy | terms | report | whatsapp | about"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Keranjang",
+      "item": [
+        {
+          "name": "Lihat keranjang",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/cart", "host": ["{{baseUrl}}"], "path": ["cart"] } }
+        },
+        {
+          "name": "Tambah item",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Taro Cloud Latte\",\n  \"image\": \"assets/taro cloud latte.png\",\n  \"base_price\": 28000,\n  \"unit_price\": 28000,\n  \"quantity\": 1,\n  \"size\": \"Regular\",\n  \"milk\": \"Milk\",\n  \"sugar\": \"Normal Sugar\",\n  \"ice\": \"Normal Ice\",\n  \"toppings\": [],\n  \"syrups\": [],\n  \"note\": \"\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/cart/items", "host": ["{{baseUrl}}"], "path": ["cart", "items"] }
+          }
+        },
+        {
+          "name": "Ubah jumlah",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"quantity\": 2\n}" },
+            "url": { "raw": "{{baseUrl}}/cart/items/1", "host": ["{{baseUrl}}"], "path": ["cart", "items", "1"] },
+            "description": "quantity = 0 menghapus item."
+          }
+        },
+        {
+          "name": "Hapus item",
+          "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/cart/items/1", "host": ["{{baseUrl}}"], "path": ["cart", "items", "1"] } }
+        },
+        {
+          "name": "Kosongkan keranjang",
+          "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/cart", "host": ["{{baseUrl}}"], "path": ["cart"] } }
+        }
+      ]
+    },
+    {
+      "name": "Pesanan",
+      "item": [
+        {
+          "name": "Riwayat pesanan",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/orders", "host": ["{{baseUrl}}"], "path": ["orders"] } }
+        },
+        {
+          "name": "Buat pesanan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('kode #1002+', () => pm.expect(body.data.code).to.match(/^#1[0-9]{3}$/));",
+                  "pm.collectionVariables.set('orderId', body.data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"name\": \"Taro Cloud Latte\",\n      \"image\": \"assets/taro cloud latte.png\",\n      \"base_price\": 28000,\n      \"unit_price\": 28000,\n      \"quantity\": 2,\n      \"size\": \"Regular\",\n      \"milk\": \"Milk\",\n      \"sugar\": \"Normal Sugar\",\n      \"ice\": \"Normal Ice\",\n      \"toppings\": [],\n      \"syrups\": [],\n      \"note\": \"\"\n    }\n  ],\n  \"outlet_id\": 1,\n  \"bag_fee\": 2000,\n  \"voucher_code\": \"KANGENAN10\",\n  \"points_used\": 0,\n  \"payment_method_id\": \"qris\",\n  \"fulfilment\": \"Pickup\",\n  \"scheduled_at\": null\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/orders", "host": ["{{baseUrl}}"], "path": ["orders"] },
+            "description": "Total = subtotal + bag_fee - voucher_discount - points_used (tidak negatif). Poin yang diminta melebihi saldo akan dipangkas otomatis."
+          }
+        },
+        {
+          "name": "Detail pesanan",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/orders/{{orderId}}", "host": ["{{baseUrl}}"], "path": ["orders", "{{orderId}}"] } }
+        },
+        {
+          "name": "Majukan status",
+          "request": { "method": "PUT", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/orders/{{orderId}}/advance", "host": ["{{baseUrl}}"], "path": ["orders", "{{orderId}}", "advance"] }, "description": "Pending → Processing → Ready → Completed." }
+        },
+        {
+          "name": "Batalkan pesanan",
+          "request": { "method": "PUT", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/orders/{{orderId}}/cancel", "host": ["{{baseUrl}}"], "path": ["orders", "{{orderId}}", "cancel"] } }
+        }
+      ]
+    },
+    {
+      "name": "Voucher & Promo",
+      "item": [
+        {
+          "name": "Voucher saya",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/vouchers", "host": ["{{baseUrl}}"], "path": ["vouchers"] } }
+        },
+        {
+          "name": "Katalog voucher",
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/vouchers/catalog", "host": ["{{baseUrl}}"], "path": ["vouchers", "catalog"] } }
+        },
+        {
+          "name": "Pakai kode voucher",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"code\": \"{{voucherCode}}\",\n  \"subtotal\": 56000\n}" },
+            "url": { "raw": "{{baseUrl}}/vouchers/validate", "host": ["{{baseUrl}}"], "path": ["vouchers", "validate"] },
+            "description": "Voucher dari katalog otomatis masuk ke akun. Kode: KANGENAN10 | GRATISKOPI | ONGKIRHEMAT."
+          }
+        },
+        {
+          "name": "Daftar paket voucher",
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/voucher-packs", "host": ["{{baseUrl}}"], "path": ["voucher-packs"] } }
+        },
+        {
+          "name": "Beli paket voucher",
+          "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/voucher-packs/{{packId}}/buy", "host": ["{{baseUrl}}"], "path": ["voucher-packs", "{{packId}}", "buy"] } }
+        },
+        {
+          "name": "Promo yang diklaim",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/promos", "host": ["{{baseUrl}}"], "path": ["promos"] } }
+        },
+        {
+          "name": "Klaim promo",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"label\": \"Diskon & Cashback\"\n}" },
+            "url": { "raw": "{{baseUrl}}/promos/claim", "host": ["{{baseUrl}}"], "path": ["promos", "claim"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Membership & Poin",
+      "item": [
+        {
+          "name": "Membership saya",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/membership", "host": ["{{baseUrl}}"], "path": ["membership"] } }
+        },
+        {
+          "name": "Riwayat poin",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/points/history", "host": ["{{baseUrl}}"], "path": ["points", "history"] } }
+        },
+        {
+          "name": "Hadiah check-in",
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/checkin/rewards", "host": ["{{baseUrl}}"], "path": ["checkin", "rewards"] } }
+        },
+        {
+          "name": "Status check-in",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/checkin", "host": ["{{baseUrl}}"], "path": ["checkin"] } }
+        },
+        {
+          "name": "Check-in hari ini",
+          "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/checkin", "host": ["{{baseUrl}}"], "path": ["checkin"] } }
+        }
+      ]
+    },
+    {
+      "name": "Alamat",
+      "item": [
+        {
+          "name": "Daftar alamat",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/addresses", "host": ["{{baseUrl}}"], "path": ["addresses"] } }
+        },
+        {
+          "name": "Tambah alamat",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.data && body.data.id) pm.collectionVariables.set('addressId', body.data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Kantor\",\n  \"recipient\": \"Budi\",\n  \"phone\": \"0812-0000-1111\",\n  \"detail\": \"Jl. Basuki Rahmat No. 1, Surabaya\",\n  \"note\": \"Lantai 3, dekat lift\",\n  \"is_default\": false\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/addresses", "host": ["{{baseUrl}}"], "path": ["addresses"] }
+          }
+        },
+        {
+          "name": "Ubah alamat",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"label\": \"Kantor Pusat\",\n  \"recipient\": \"Budi\",\n  \"phone\": \"0812-0000-1111\",\n  \"detail\": \"Jl. Basuki Rahmat No. 1, Surabaya\",\n  \"note\": \"\",\n  \"is_default\": true\n}" },
+            "url": { "raw": "{{baseUrl}}/addresses/{{addressId}}", "host": ["{{baseUrl}}"], "path": ["addresses", "{{addressId}}"] }
+          }
+        },
+        {
+          "name": "Jadikan alamat utama",
+          "request": { "method": "PUT", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/addresses/{{addressId}}/default", "host": ["{{baseUrl}}"], "path": ["addresses", "{{addressId}}", "default"] } }
+        },
+        {
+          "name": "Hapus alamat",
+          "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/addresses/{{addressId}}", "host": ["{{baseUrl}}"], "path": ["addresses", "{{addressId}}"] } }
+        }
+      ]
+    },
+    {
+      "name": "Pembayaran",
+      "item": [
+        {
+          "name": "Metode pembayaran",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/payment-methods", "host": ["{{baseUrl}}"], "path": ["payment-methods"] } }
+        },
+        {
+          "name": "Pilih metode",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"payment_method_id\": \"qris\"\n}" },
+            "url": { "raw": "{{baseUrl}}/payment-methods/select", "host": ["{{baseUrl}}"], "path": ["payment-methods", "select"] }
+          }
+        },
+        {
+          "name": "Hubungkan metode",
+          "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/payment-methods/gopay/connect", "host": ["{{baseUrl}}"], "path": ["payment-methods", "gopay", "connect"] } }
+        }
+      ]
+    },
+    {
+      "name": "Kotak Masuk",
+      "item": [
+        {
+          "name": "Daftar pesan",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/inbox", "host": ["{{baseUrl}}"], "path": ["inbox"] } }
+        },
+        {
+          "name": "Tandai sudah dibaca",
+          "request": { "method": "PUT", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/inbox/{{messageId}}/read", "host": ["{{baseUrl}}"], "path": ["inbox", "{{messageId}}", "read"] } }
+        },
+        {
+          "name": "Tandai semua dibaca",
+          "request": { "method": "PUT", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/inbox/read-all", "host": ["{{baseUrl}}"], "path": ["inbox", "read-all"] } }
+        }
+      ]
+    },
+    {
+      "name": "Pengaturan",
+      "item": [
+        {
+          "name": "Lihat pengaturan",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/settings", "host": ["{{baseUrl}}"], "path": ["settings"] } }
+        },
+        {
+          "name": "Ubah pengaturan",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"language\": \"english\",\n  \"notif_promo\": true,\n  \"notif_pesanan\": false,\n  \"biometric\": true\n}" },
+            "url": { "raw": "{{baseUrl}}/settings", "host": ["{{baseUrl}}"], "path": ["settings"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Profil",
+      "item": [
+        {
+          "name": "Lihat profil",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/profile", "host": ["{{baseUrl}}"], "path": ["profile"] } }
+        },
+        {
+          "name": "Ubah profil",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Pengguna Demo\",\n  \"identifier\": \"demo@kangenan.com\"\n}" },
+            "url": { "raw": "{{baseUrl}}/profile", "host": ["{{baseUrl}}"], "path": ["profile"] }
+          }
+        },
+        {
+          "name": "Ganti password",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"current_password\": \"123456\",\n  \"password\": \"123456\",\n  \"password_confirmation\": \"123456\"\n}" },
+            "url": { "raw": "{{baseUrl}}/profile/password", "host": ["{{baseUrl}}"], "path": ["profile", "password"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pesanan Besar (Bulk)",
+      "item": [
+        {
+          "name": "Ajukan pesanan besar",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"PT Maju Jaya\",\n  \"contact\": \"0812-3456-7890\",\n  \"purpose\": \"Rapat kantor\",\n  \"estimated_cups\": 50,\n  \"event_date\": \"2026-11-01\",\n  \"note\": \"Dikirim pagi\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/bulk-orders", "host": ["{{baseUrl}}"], "path": ["bulk-orders"] }
+          }
+        },
+        {
+          "name": "Permintaan saya",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Accept", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/bulk-orders", "host": ["{{baseUrl}}"], "path": ["bulk-orders"] } }
+        }
+      ]
+    }
+  ]
+}
